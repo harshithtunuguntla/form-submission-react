@@ -72,7 +72,7 @@ class createUserForm extends React.Component {
     fd.append('profileTags',this.state.profileTags);
     fd.append('email',this.state.email);
     fd.append('journeyStartedFrom',this.state.journeyStartedFrom)
-    fd.append('image', this.state.image);
+    fd.append('image', this.state.image); 
     
 
     Api.post("/testingform/receiveimage", fd).then((newval) => {
