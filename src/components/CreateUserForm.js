@@ -1,5 +1,6 @@
 import React from "react";
 import Api from "./Api";
+import moment from "moment";
 
 class createUserForm extends React.Component {
   state = {
@@ -8,96 +9,120 @@ class createUserForm extends React.Component {
     name: "",
     profileDescription: "",
     profileTags: "",
+    tagCount: "",
     email: "",
     journeyStartedFrom: "",
     image: null,
+    video: null,
   };
 
   onFormSubmit = async (event) => {
     event.preventDefault();
 
-    //   api.get('/',{
-    //       headers: {
-    //           'Content-Type': 'application/json',
-    //           'Accept' : '*/*'
-    //       },
-    //       params : {
-    //           type : "/"
-    //           },
-    //       body:{'userid':'6f7d42a3e1ea68482a566e17eabe7630'}
-    //   }).then(
-    //       res=>{
-    //           console.log(res.data);
-    //       }
-    //   ).catch(error => {
-    //     console.error('There was an error!', error);
-    // });
-
-    // const data = {superUserID : this.state.superUserID}
-    const data = {
-      superUserID: this.state.superUserID,
-      designation: this.state.designation,
-      name: this.state.name,
-      profileDescription: this.state.profileDescription,
-      profileTags: this.state.profileTags,
-      email: this.state.email,
-      journeyStartedFrom: this.state.journeyStartedFrom,
-      image: this.state.image,
-    };
-
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    };
-
-    // fetch("http://127.0.0.1:8000/testingform/receivedata", requestOptions)
-    // .then((result)=>result.json())
-    // .then((newval)=>{console.log(newval.message)})
-
-    // const response = await Api.post("/testingform/receivedata", requestOptions);
-    // console.log(response);
-
-    // console.log(`${this.state.img}`)
-
-    // Api.post("/testingform/receivedata", requestOptions).then((newval) => {
-    //   console.log(newval.data.message);
-    // });
-
     const fd = new FormData();
-    fd.append('superUserID',this.state.superUserID);
-    fd.append('designation',this.state.designation);
-    fd.append('name',this.state.name);
-    fd.append('profileDescription',this.state.profileDescription);
-    fd.append('profileTags',this.state.profileTags);
-    fd.append('email',this.state.email);
-    fd.append('journeyStartedFrom',this.state.journeyStartedFrom)
-    fd.append('image', this.state.image); 
-    
+    fd.append("superUserID", this.state.superUserID);
+    fd.append("designation", this.state.designation);
+    fd.append("name", this.state.name);
+    fd.append("profileDescription", this.state.profileDescription);
+    fd.append("profileTags", this.state.profileTags);
+    fd.append("email", this.state.email);
+    fd.append("journeyStartedFrom", this.state.journeyStartedFrom);
+    fd.append("image", this.state.image);
+    fd.append("video", this.state.video);
 
-    Api.post("/testingform/receiveimage", fd).then((newval) => {
-      console.log(newval.data.message);
-    }).catch(err=>console.log(err))
+    if (
+      this.state.superUserID === "" ||
+      this.state.designation === "" ||
+      this.state.name === "" ||
+      this.state.profileDescription === "" ||
+      this.state.profileTags === "" ||
+      this.state.email === "" ||
+      this.state.journeyStartedFrom === ""
+    ) {
+      alert("Please enter all the details");
+    } else {
+      if (this.state.image != null && this.state.video != null) {
+        const val = this.state.tagCount;
+        console.log(val);
+        if (
+          window.confirm(
+            `You have added only ${this.state.tagCount} profile tags, do you want to continue `
+          )
+        ) {
+          Api.post("/testingform/senddata", fd)
+            .then((newval) => {
+              console.log(newval.data.message);
+            })
+            .catch((err) => console.log(err));
+
+          this.setState({
+            superUserID: "",
+            designation: "",
+            name: "",
+            profileDescription: "",
+            profileTags: "",
+            tagCount: "",
+            email: "",
+            journeyStartedFrom: "",
+            image: null,
+            video: null,
+          });
+
+          document.getElementById("imagefile").value = "";
+
+          document.getElementById("videofile").value = "";
+        }
+      } else {
+        alert("Image or video is missing");
+      }
+    }
   };
 
   onImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
-      console.log("inside");
+      const image = event.target.files[0];
+
+      console.log(image.type.split("/")[0]);
+
+      if (image.type.split("/")[0] !== "image") {
+        alert("Please use image format only");
+        event.target.value = null;
+      } else {
+        if (image.size / 1000000 > 1024) {
+          alert("Image size greater than 1024");
+          event.target.value = null;
+        } else {
+          this.setState({
+            image: event.target.files[0],
+          });
+        }
+      }
+    }
+  };
+
+  onVideoChange = (event) => {
+    const video = event.target.files[0];
+    console.log(video.type);
+
+    if (video.type.split("/")[0] !== "video") {
+      alert("Please use video format only");
+      event.target.value = null;
+    } else {
       this.setState({
-        image: event.target.files[0]
+        video: event.target.files[0],
       });
     }
-    console.log(event.target.files[0]);
   };
 
   render() {
     return (
-      <div className="ui container">
+      <div className="ui container" style={{ paddingTop: 3 }}>
         <form className="ui form" onSubmit={this.onFormSubmit}>
           <div className="field">
             <label>Super User ID</label>
             <input
               type="text"
+              placeholder="Enter Super User ID"
               onChange={(e) => {
                 this.setState({ superUserID: e.target.value });
               }}
@@ -109,6 +134,7 @@ class createUserForm extends React.Component {
             <label>Designation</label>
             <input
               type="text"
+              placeholder="Enter your designation"
               onChange={(e) => {
                 this.setState({ designation: e.target.value });
               }}
@@ -120,6 +146,7 @@ class createUserForm extends React.Component {
             <label>Name</label>
             <input
               type="text"
+              placeholder="Enter your name"
               onChange={(e) => {
                 this.setState({ name: e.target.value });
               }}
@@ -131,6 +158,7 @@ class createUserForm extends React.Component {
             <label>Profile Description</label>
             <input
               type="text"
+              placeholder="Enter Profile Description"
               onChange={(e) => {
                 this.setState({ profileDescription: e.target.value });
               }}
@@ -142,7 +170,10 @@ class createUserForm extends React.Component {
             <label>Profile Tags</label>
             <input
               type="text"
+              placeholder="Enter tags related to your profile (separate tags by comma)"
               onChange={(e) => {
+                console.log(e.target.value.split(",").length);
+                this.setState({ tagCount: e.target.value.split(",").length });
                 this.setState({ profileTags: e.target.value });
               }}
               value={this.state.profileTags}
@@ -152,7 +183,8 @@ class createUserForm extends React.Component {
           <div className="field">
             <label>Email</label>
             <input
-              type="text"
+              type="email"
+              placeholder="Enter your email id"
               onChange={(e) => {
                 this.setState({ email: e.target.value });
               }}
@@ -163,7 +195,9 @@ class createUserForm extends React.Component {
           <div className="field">
             <label>Journey Started From</label>
             <input
-              type="text"
+              type="date"
+              max={moment().format("YYYY-MM-DD")}
+              min={"1900-01-12"}
               onChange={(e) => {
                 this.setState({ journeyStartedFrom: e.target.value });
               }}
@@ -171,12 +205,33 @@ class createUserForm extends React.Component {
             ></input>
           </div>
 
-          <label>Upload Image</label>
-          <input type="file" onChange={this.onImageChange} />
+          <label>
+            Upload Image{" "}
+            <span style={{ fontSize: 10 }}>(Max Allowed Size : 2MB)</span>
+          </label>
+          <input
+            type="file"
+            onChange={this.onImageChange}
+            id="imagefile"
+            accept="image/*"
+          />
 
-          <button className="ui button" type="submit">
-            Submit
-          </button>
+          <label>
+            Upload Video{" "}
+            <span style={{ fontSize: 10 }}>(Max Allowed Size : 11MB)</span>{" "}
+          </label>
+          <input
+            type="file"
+            onChange={this.onVideoChange}
+            id="videofile"
+            accept="video/*"
+          />
+
+          <div style={{ paddingTop: 10 }}>
+            <button className="ui button" type="submit">
+              Submit
+            </button>
+          </div>
         </form>
       </div>
     );
